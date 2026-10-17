@@ -13,6 +13,8 @@ public class SubmarineMovementScript : MonoBehaviour
     public float rotationDuration = 0.4f; 
     public float velocitySensitivity = 5f; 
 
+    public bool isFacingRight = true;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -24,8 +26,24 @@ public class SubmarineMovementScript : MonoBehaviour
 
         if (Input.GetKey(KeyCode.W)) movementInput.y = 1;
         if (Input.GetKey(KeyCode.S)) movementInput.y = -1;
-        if (Input.GetKey(KeyCode.A)) movementInput.x = -1;
-        if (Input.GetKey(KeyCode.D)) movementInput.x = 1;
+
+        if (Input.GetKey(KeyCode.A)) 
+        { 
+            movementInput.x = -1;
+            if (isFacingRight) {
+                isFacingRight = false;
+                transform.Rotate(new Vector2(0, 180));
+            }
+
+        }
+        if (Input.GetKey(KeyCode.D)) 
+        {
+            movementInput.x = 1;
+            if (!isFacingRight) {
+                isFacingRight = true;
+                transform.Rotate(new Vector2(0, 180));
+            }
+        }
 
         movementInput = movementInput.normalized;
     }
@@ -40,7 +58,7 @@ public class SubmarineMovementScript : MonoBehaviour
             
             float targetAngle = speedRatio * maxTiltAngle;
             
-
+            if (!isFacingRight) targetAngle = -targetAngle;
             rb.DORotate(targetAngle, 0.1f).SetUpdate(UpdateType.Fixed).SetEase(Ease.OutQuad);
         }
     }
