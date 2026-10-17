@@ -12,7 +12,7 @@ public class BubbleScript : MonoBehaviour
 
     private void Start()
     {
-        Destroy(gameObject, 3);
+        Destroy(gameObject, 5);
     }
 
     private void Update()
