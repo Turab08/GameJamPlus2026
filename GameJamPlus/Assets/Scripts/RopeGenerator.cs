@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class RopeGenerator : MonoBehaviour
 {
@@ -27,6 +28,14 @@ public class RopeGenerator : MonoBehaviour
     [Header("Visual Rendering (Optional)")]
     [Tooltip("Optional LineRenderer to draw a continuous rope connecting the links.")]
     [SerializeField] private LineRenderer lineRenderer;
+
+    [Header("Sever / Break Settings")]
+    [Tooltip("Optional effect spawned at the cut point when the rope is severed.")]
+    [SerializeField] private GameObject cutEffectPrefab;
+    [Tooltip("Invoked whenever any link in the rope is severed.")]
+    public UnityEvent OnRopeCut;
+    [Tooltip("Invoked when the attached end body is detached from the rope.")]
+    public UnityEvent OnEndBodyDetached;
 
     private readonly List<GameObject> activeLinks = new List<GameObject>();
 
@@ -62,7 +71,7 @@ public class RopeGenerator : MonoBehaviour
         if (previousRigidbody == null)
         {
             previousRigidbody = gameObject.AddComponent<Rigidbody2D>();
-            previousRigidbody.bodyType = RigidbodyType2D.Static; // Fixed: was Rigidbody2DType.Static
+            previousRigidbody.bodyType = RigidbodyType2D.Static;
         }
 
         // Determine link size
@@ -72,7 +81,7 @@ public class RopeGenerator : MonoBehaviour
 
         for (int i = 0; i < ropeLength; i++)
         {
-            // Spawn each link staggered along -transform.up so they hang naturally instead of overlapping and exploding
+            // Spawn each link staggered along -transform.up so they hang naturally
             Vector3 spawnPos = transform.position + (Vector3)anchorOffset - transform.up * (linkSize * (i + 0.5f));
             GameObject newLink = Instantiate(linkPrefab, spawnPos, transform.rotation);
             activeLinks.Add(newLink);
@@ -122,13 +131,29 @@ public class RopeGenerator : MonoBehaviour
                 joint.connectedAnchor = new Vector2(0f, -linkSize * 0.5f);
             }
 
-            // Prevent collision jitter between adjacent links
+            // Ensure the link has a Collider2D so the harpoon can detect hits
             Collider2D currentCol = newLink.GetComponent<Collider2D>();
+            if (currentCol == null)
+            {
+                CapsuleCollider2D capCol = newLink.AddComponent<CapsuleCollider2D>();
+                capCol.size = new Vector2(linkSize * 0.4f, linkSize);
+                currentCol = capCol;
+            }
+
+            // Prevent collision jitter between adjacent links
             if (previousCollider != null && currentCol != null)
             {
                 Physics2D.IgnoreCollision(previousCollider, currentCol);
             }
             previousCollider = currentCol;
+
+            // Attach RopeLink component for hit detection and severing
+            RopeLink ropeLink = newLink.GetComponent<RopeLink>();
+            if (ropeLink == null)
+            {
+                ropeLink = newLink.AddComponent<RopeLink>();
+            }
+            ropeLink.Initialize(this, i, joint, linkRb);
 
             previousRigidbody = linkRb;
         }
@@ -155,6 +180,82 @@ public class RopeGenerator : MonoBehaviour
         endJoint.connectedAnchor = new Vector2(0f, -linkSize * 0.5f);
     }
 
+    /// <summary>
+    /// Severs the rope at the specified link. Destroys the hinge connecting it to the upper chain,
+    /// causing the link and all downstream links to drop freely under gravity.
+    /// </summary>
+    public void SeverAt(RopeLink link, Vector2 impulse = default)
+    {
+        if (link == null) return;
+
+        int k = activeLinks.IndexOf(link.gameObject);
+        if (k < 0) return; // Not an active link in this generator
+
+        // Spawn cut visual effect if assigned
+        if (cutEffectPrefab != null)
+        {
+            Instantiate(cutEffectPrefab, link.transform.position, Quaternion.identity);
+        }
+
+        // Break the joint on this link
+        if (link.joint != null)
+        {
+            Destroy(link.joint);
+            link.joint = null;
+        }
+
+        // Apply physical cut impulse to the severed link
+        if (link.rb != null && impulse != Vector2.zero)
+        {
+            link.rb.AddForce(impulse, ForceMode2D.Impulse);
+        }
+
+        // Separate the falling links from the active top chain
+        int countToSever = activeLinks.Count - k;
+        List<GameObject> fallingLinks = activeLinks.GetRange(k, countToSever);
+        activeLinks.RemoveRange(k, countToSever);
+
+        // Unparent falling links so they move completely independently in world space
+        foreach (var fl in fallingLinks)
+        {
+            if (fl != null)
+            {
+                fl.transform.SetParent(null);
+            }
+        }
+
+        // If using a LineRenderer, create a separate visual cable for the falling segment
+        if (lineRenderer != null && fallingLinks.Count > 1)
+        {
+            CreateSeveredLineVisual(fallingLinks);
+        }
+
+        // Invoke gameplay events
+        OnRopeCut?.Invoke();
+        if (endAttachedBody != null)
+        {
+            OnEndBodyDetached?.Invoke();
+        }
+    }
+
+    private void CreateSeveredLineVisual(List<GameObject> fallingLinks)
+    {
+        GameObject severedObj = new GameObject("SeveredRopeLine");
+        LineRenderer fallingLine = severedObj.AddComponent<LineRenderer>();
+
+        // Copy visual appearance from the main line renderer
+        fallingLine.sharedMaterial = lineRenderer.sharedMaterial;
+        fallingLine.startColor = lineRenderer.startColor;
+        fallingLine.endColor = lineRenderer.endColor;
+        fallingLine.startWidth = lineRenderer.startWidth;
+        fallingLine.endWidth = lineRenderer.endWidth;
+        fallingLine.sortingLayerID = lineRenderer.sortingLayerID;
+        fallingLine.sortingOrder = lineRenderer.sortingOrder;
+
+        SeveredRopeVisual visual = severedObj.AddComponent<SeveredRopeVisual>();
+        visual.Initialize(fallingLine, fallingLinks);
+    }
+
     private float CalculateLinkSize()
     {
         if (linkDistance > 0f) return linkDistance;
@@ -162,7 +263,7 @@ public class RopeGenerator : MonoBehaviour
         SpriteRenderer sr = linkPrefab.GetComponentInChildren<SpriteRenderer>();
         if (sr != null && sr.sprite != null)
         {
-            float spriteHeight = (sr.sprite.rect.height / sr.sprite.pixelsPerUnit) * linkPrefab.transform.localScale.y;
+            float spriteHeight = (sr.sprite.rect.height / sr.sprite.pixelsPerUnit) * Mathf.Abs(linkPrefab.transform.localScale.y);
             if (spriteHeight > 0.001f) return spriteHeight;
         }
 
@@ -177,7 +278,13 @@ public class RopeGenerator : MonoBehaviour
 
     private void UpdateLineRenderer()
     {
-        if (lineRenderer == null || activeLinks.Count == 0) return;
+        if (lineRenderer == null) return;
+
+        if (activeLinks.Count == 0)
+        {
+            lineRenderer.positionCount = 0;
+            return;
+        }
 
         lineRenderer.positionCount = activeLinks.Count + 1;
         lineRenderer.SetPosition(0, transform.position + (Vector3)anchorOffset);
@@ -194,6 +301,11 @@ public class RopeGenerator : MonoBehaviour
     [ContextMenu("Clear Rope")]
     public void ClearRope()
     {
+        if (lineRenderer != null)
+        {
+            lineRenderer.positionCount = 0;
+        }
+
         foreach (var link in activeLinks)
         {
             if (link != null)
@@ -216,3 +328,41 @@ public class RopeGenerator : MonoBehaviour
         ClearRope();
     }
 }
+
+/// <summary>
+/// Helper component that draws a continuous LineRenderer for a severed falling rope segment.
+/// </summary>
+public class SeveredRopeVisual : MonoBehaviour
+{
+    private LineRenderer line;
+    private List<GameObject> links;
+
+    public void Initialize(LineRenderer line, List<GameObject> links)
+    {
+        this.line = line;
+        this.links = links;
+    }
+
+    void LateUpdate()
+    {
+        if (line == null || links == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        links.RemoveAll(item => item == null);
+        if (links.Count == 0)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        line.positionCount = links.Count;
+        for (int i = 0; i < links.Count; i++)
+        {
+            line.SetPosition(i, links[i].transform.position);
+        }
+    }
+}
+
