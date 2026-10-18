@@ -3,49 +3,32 @@ using UnityEngine;
 
 public class CatShooter : MonoBehaviour
 {
-    [Header("Harpoon Setup")]
     [SerializeField] private Transform firePoint;
     [SerializeField] private GameObject harpoonPrefab;
     [SerializeField] private float maxRange = 10f;
-    [SerializeField] private float launchDuration = 0.4f; // Time to reach max range
+    [SerializeField] private float launchDuration = 0.4f; 
     [SerializeField] private Ease outEase = Ease.OutQuad;
-    [SerializeField] private LayerMask hitLayers = ~0; // Layers the harpoon can hit
+    [SerializeField] private LayerMask hitLayers = ~0;
 
-    [Header("Gun / Weapon Sprite")]
-    [Tooltip("The child Transform holding the harpoon gun sprite. Automatically detected from children if unassigned.")]
     [SerializeField] private Transform gunTransform;
-    [Tooltip("Optional child transform placed at the tip of the gun barrel. If unassigned, tip position is calculated automatically.")]
     [SerializeField] private Transform gunTip;
-    [Tooltip("Distance from gun origin to its tip along local +X (used if gunTip is not assigned).")]
     [SerializeField] private float gunTipOffset = 0.8f;
-    [Tooltip("If true, automatically calculates the tip offset from the gun's SpriteRenderer dimensions and pivot.")]
     [SerializeField] private bool autoCalculateGunTip = true;
-    [Tooltip("Angular offset in degrees if the sprite was drawn facing a direction other than right (+X).")]
     [SerializeField] private float gunAngleOffset = 0f;
 
     private SpriteRenderer gunSpriteRenderer;
 
-    [Header("Harpoon Collision Tip")]
-    [Tooltip("Local offset from harpoon base to the tip collider (matches harpoon tip position).")]
     [SerializeField] private Vector2 harpoonTipOffset = new Vector2(1.5f, 0f);
-    [Tooltip("Radius of the collision trigger at the harpoon tip.")]
     [SerializeField] private float harpoonTipRadius = 0.35f;
 
-    [Header("Rope / Harpoon Cable")]
     [SerializeField] private LineRenderer ropeLine;
     [SerializeField] private float ropeWidth = 0.06f;
     [SerializeField] private Color ropeColor = new Color(0.85f, 0.85f, 0.85f, 1f);
 
-    [Header("Crosshair (Approach A)")]
-    [Tooltip("Enable custom crosshair that locks/hides system cursor and follows the mouse.")]
     [SerializeField] private bool useCustomCrosshair = true;
-    [Tooltip("Lock and confine system cursor to game window and hide OS pointer.")]
     [SerializeField] private bool lockSystemCursor = true;
-    [Tooltip("Rotate the crosshair to point along the hook direction from firePoint to mouse.")]
     [SerializeField] private bool rotateCrosshairToHook = true;
-    [Tooltip("Optional custom crosshair transform. If unassigned, one will be created automatically.")]
     [SerializeField] private Transform crosshairTransform;
-    [Tooltip("Optional custom crosshair sprite. If null, a clean procedural reticle is generated.")]
     [SerializeField] private Sprite crosshairSprite;
     [SerializeField] private Color crosshairColor = new Color(1f, 0.35f, 0.35f, 0.95f);
     [SerializeField] private float crosshairScale = 0.5f;
@@ -53,22 +36,16 @@ public class CatShooter : MonoBehaviour
 
     public enum FacingMode
     {
-        YRotation,       // Rotates 180 on Y axis (standard for transforms & child objects)
-        LocalScaleX,     // Inverts localScale.x (classic sprite flip)
-        SpriteRenderer   // Toggles flipX on SpriteRenderer
+        YRotation,      
+        LocalScaleX,     
+        SpriteRenderer   
     }
 
-    [Header("Horizontal Facing / Rotation")]
-    [Tooltip("If true, the player will horizontally face / rotate towards the mouse position.")]
     [SerializeField] private bool rotatePlayerToMouse = true;
-    [Tooltip("Target transform to rotate horizontally. Defaults to this transform (the player).")]
     [SerializeField] private Transform playerTransform;
-    [Tooltip("Method used to face the player horizontally.")]
     [SerializeField] private FacingMode horizontalFacingMode = FacingMode.YRotation;
-    [Tooltip("Smoothly interpolate horizontal rotation (only applicable in YRotation mode).")]
     [SerializeField] private bool smoothHorizontalRotation = false;
     [SerializeField] private float rotationSpeed = 720f;
-    [Tooltip("Horizontal distance threshold between player and mouse before flipping to avoid twitching.")]
     [SerializeField] private float horizontalDeadzone = 0.1f;
 
     private bool isFacingRight = true;
@@ -134,7 +111,6 @@ public class CatShooter : MonoBehaviour
             firePoint = found != null ? found : (gunTransform != null ? gunTransform : transform);
         }
 
-        // Initialize Rope Line
         if (ropeLine == null)
         {
             GameObject ropeObj = new GameObject("HarpoonRope");
@@ -144,7 +120,6 @@ public class CatShooter : MonoBehaviour
         SetupLineRenderer(ropeLine, ropeColor, ropeWidth, ropeWidth);
         ropeLine.enabled = false;
 
-        // Initialize Crosshair
         if (useCustomCrosshair)
         {
             InitializeCrosshair();
@@ -160,7 +135,6 @@ public class CatShooter : MonoBehaviour
             return;
         }
 
-        // 1. Look for children by common weapon names
         string[] candidateNames = { "Gun", "HarpoonGun", "Harpoon Gun", "ShootPosition", "Weapon", "Arm", "Shooter" };
         foreach (string cName in candidateNames)
         {
@@ -172,7 +146,6 @@ public class CatShooter : MonoBehaviour
             }
         }
 
-        // 2. If not found, look for any child with a SpriteRenderer (other than player body)
         if (gunTransform == null)
         {
             SpriteRenderer[] childRenderers = GetComponentsInChildren<SpriteRenderer>();
@@ -187,7 +160,6 @@ public class CatShooter : MonoBehaviour
             }
         }
 
-        // 3. Fallback to firePoint if it is a child
         if (gunTransform == null && firePoint != null && firePoint != transform)
         {
             gunTransform = firePoint;
@@ -204,9 +176,6 @@ public class CatShooter : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Gets the exact world position of the tip of the gun sprite where harpoons spawn and ropes connect.
-    /// </summary>
     public Vector3 GetLaunchPosition()
     {
         if (gunTip != null) return gunTip.position;
@@ -218,9 +187,6 @@ public class CatShooter : MonoBehaviour
         return gun.position + gun.right * dist;
     }
 
-    /// <summary>
-    /// Calculates the distance along the gun's +X axis from its origin/pivot to the tip of the barrel.
-    /// </summary>
     public float GetGunTipDistance()
     {
         if (!autoCalculateGunTip && gunTipOffset > 0f)
@@ -279,7 +245,6 @@ public class CatShooter : MonoBehaviour
             LaunchHarpoon();
         }
 
-        // Keep the rope connected between the gun tip and harpoon head while in flight
         if (isFiring && currentHarpoon != null && ropeLine != null)
         {
             ropeLine.SetPosition(0, GetLaunchPosition());
@@ -323,10 +288,8 @@ public class CatShooter : MonoBehaviour
         Vector3 mousePos = mainCam.ScreenToWorldPoint(Input.mousePosition);
         mousePos.z = 0f;
 
-        // 1. Horizontally rotate / face the player towards the mouse position
         RotatePlayerHorizontally(mousePos);
 
-        // 2. Point the harpoon gun sprite child to the crosshair / mouse exactly
         Vector3 targetAimPos = (useCustomCrosshair && crosshairTransform != null) ? crosshairTransform.position : mousePos;
         targetAimPos.z = 0f;
         AimGunAt(targetAimPos);
@@ -345,7 +308,6 @@ public class CatShooter : MonoBehaviour
 
         Transform parent = playerTransform != null ? playerTransform : transform;
 
-        // If the gun is parented under the player, calculate rotation in parent's local space
         if (gun.IsChildOf(parent))
         {
             Vector3 localDir = parent.InverseTransformDirection(aimDir);
@@ -358,7 +320,6 @@ public class CatShooter : MonoBehaviour
             gun.rotation = Quaternion.Euler(0f, 0f, worldAngle);
         }
 
-        // Prevent the gun sprite from being upside down when aiming
         if (gunSpriteRenderer == null)
         {
             gunSpriteRenderer = gun.GetComponentInChildren<SpriteRenderer>();
@@ -370,7 +331,6 @@ public class CatShooter : MonoBehaviour
             gunSpriteRenderer.flipY = isUpsideDown;
         }
 
-        // Keep firePoint synchronized if separate
         if (firePoint != null && firePoint != gun)
         {
             firePoint.position = GetLaunchPosition();
@@ -448,7 +408,6 @@ public class CatShooter : MonoBehaviour
         Vector3 targetPos = launchPos + (Vector3)(dir * targetDistance);
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
-        // Instantiate harpoon projectile pointing forward from the gun tip along aim direction
         if (harpoonPrefab != null)
         {
             currentHarpoon = Instantiate(harpoonPrefab, launchPos, Quaternion.Euler(0f, 0f, angle));
@@ -462,14 +421,12 @@ public class CatShooter : MonoBehaviour
             Destroy(currentHarpoon.GetComponent<Collider>());
         }
 
-        // Ensure harpoon sprites render cleanly above the rope
         SpriteRenderer[] srs = currentHarpoon.GetComponentsInChildren<SpriteRenderer>();
         foreach (var sr in srs)
         {
             if (sr.sortingOrder < 6) sr.sortingOrder = 6;
         }
 
-        // Ensure harpoon has a 2D Trigger Collider positioned at the tip
         Collider2D col = currentHarpoon.GetComponent<Collider2D>();
         if (col == null)
         {
@@ -480,7 +437,6 @@ public class CatShooter : MonoBehaviour
         }
         col.isTrigger = true;
 
-        // Attach HarpoonCollisionRelay to notify CatShooter upon impact
         HarpoonCollisionRelay relay = currentHarpoon.GetComponent<HarpoonCollisionRelay>();
         if (relay == null)
         {
@@ -488,7 +444,6 @@ public class CatShooter : MonoBehaviour
         }
         relay.Initialize(this, transform, hitLayers);
 
-        // Kinematic Rigidbody2D to allow trigger detection without physics displacement
         Rigidbody2D rb = currentHarpoon.GetComponent<Rigidbody2D>();
         if (rb == null)
         {
@@ -506,14 +461,12 @@ public class CatShooter : MonoBehaviour
             ropeLine.SetPosition(1, currentHarpoon.transform.position);
         }
 
-        // DOTween Yoyo model: Moves out to target, then yoyos back to gun tip
         harpoonTween?.Kill();
         harpoonTween = currentHarpoon.transform.DOMove(targetPos, launchDuration)
             .SetEase(outEase)
             .SetLoops(2, LoopType.Yoyo)
             .OnStepComplete(() =>
             {
-                // Halfway point reached (started returning)
                 isRetracting = true;
             })
             .OnUpdate(() =>
@@ -531,9 +484,6 @@ public class CatShooter : MonoBehaviour
     {
         if (isRetracting || !isFiring) return;
 
-        Debug.Log("Harpoon hit: " + hitCollider.gameObject.name);
-
-        // Check if we hit a cuttable rope link
         RopeLink ropeLink = hitCollider.GetComponentInParent<RopeLink>();
         if (ropeLink != null)
         {
@@ -543,7 +493,6 @@ public class CatShooter : MonoBehaviour
             ropeLink.Sever(cutImpulse);
         }
 
-        // Retract early back to firePoint upon impact
         RetractEarly();
     }
 
@@ -621,17 +570,14 @@ public class CatShooter : MonoBehaviour
                 float dy = y - center;
                 float dist = Mathf.Sqrt(dx * dx + dy * dy);
 
-                // Center pip dot
                 if (dist <= 2.2f)
                 {
                     pixels[y * size + x] = white;
                     continue;
                 }
 
-                // Circular reticle ring
                 if (Mathf.Abs(dist - ringRadius) <= ringThickness * 0.5f)
                 {
-                    // Leave small gap on the right for arrow
                     if (dx < ringRadius * 0.6f || Mathf.Abs(dy) > 3f)
                     {
                         pixels[y * size + x] = white;
@@ -639,21 +585,18 @@ public class CatShooter : MonoBehaviour
                     }
                 }
 
-                // Left tick
                 if (Mathf.Abs(dy) <= 1f && dx <= -ringRadius && dx >= -ringRadius - 5f)
                 {
                     pixels[y * size + x] = white;
                     continue;
                 }
 
-                // Top & Bottom ticks
                 if (Mathf.Abs(dx) <= 1f && ((dy <= -ringRadius && dy >= -ringRadius - 5f) || (dy >= ringRadius && dy <= ringRadius + 5f)))
                 {
                     pixels[y * size + x] = white;
                     continue;
                 }
 
-                // Directional pointer arrow head on +X (pointing along forward aim direction)
                 float tipX = ringRadius + 11f;
                 float baseX = ringRadius + 2f;
                 if (dx >= baseX && dx <= tipX)
@@ -702,9 +645,6 @@ public class CatShooter : MonoBehaviour
     }
 }
 
-/// <summary>
-/// Helper component attached to the active harpoon to route trigger events back to CatShooter.
-/// </summary>
 public class HarpoonCollisionRelay : MonoBehaviour
 {
     private CatShooter shooter;
@@ -722,10 +662,8 @@ public class HarpoonCollisionRelay : MonoBehaviour
     {
         if (shooter == null) return;
 
-        // Ignore shooter's own hierarchy
         if (shooterRoot != null && collision.transform.IsChildOf(shooterRoot)) return;
 
-        // Check LayerMask
         if ((hitLayers.value & (1 << collision.gameObject.layer)) != 0)
         {
             shooter.OnHarpoonHit(collision);
