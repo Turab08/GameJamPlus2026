@@ -17,6 +17,9 @@ public class WallDestruction : MonoBehaviour
         GameObject particle = Instantiate(destructionParticle, transform.position, Quaternion.identity);
         ParticleSystem particleSystem = particle.GetComponent<ParticleSystem>();
         particleSystem.Play();
+
+        AudioManager.Instance.PlaySFX(AudioManager.Instance.WallExplosion);
+
         Destroy(particle, 1f);
         Destroy(gameObject);
     }

@@ -23,6 +23,8 @@ public class GaiserScript : MonoBehaviour
         float randXPos = Random.Range(spawnPosition.position.x - xOffset, spawnPosition.position.x + xOffset);
         coolDown -= Time.deltaTime;
 
+        // AudioManager.Instance.PlaySFX(AudioManager.Instance.GaiserSound);
+
         if (coolDown < 0) {
             Spawn(randXPos);
         }

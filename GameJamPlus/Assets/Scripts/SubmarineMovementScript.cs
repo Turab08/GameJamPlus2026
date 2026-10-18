@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using UnityEngine;
 
@@ -60,6 +61,13 @@ public class SubmarineMovementScript : MonoBehaviour
             
             if (!isFacingRight) targetAngle = -targetAngle;
             rb.DORotate(targetAngle, 0.1f).SetUpdate(UpdateType.Fixed).SetEase(Ease.OutQuad);
+
+            if (!AudioManager.Instance.submarineSource.isPlaying)
+                AudioManager.Instance.PlaySubmarine();
+        }
+        else
+        {
+            AudioManager.Instance.StopSubmarine();
         }
     }
 }
