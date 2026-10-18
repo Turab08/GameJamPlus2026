@@ -17,6 +17,8 @@ public class PushTrigger : MonoBehaviour
     private Tween currentTween;
     private bool isPushed = false;
 
+    public bool isHeavy = false;
+
     private void Awake()
     {
         if (TryGetComponent<Rigidbody2D>(out rb))
@@ -53,7 +55,7 @@ public class PushTrigger : MonoBehaviour
 
         if (transform.parent != null && collision.transform.IsChildOf(transform.parent)) return;
 
-        if (collision.GetComponentInParent<Mine>() != null || collision.CompareTag("Mine"))
+        if (collision.GetComponentInParent<Mine>() != null || collision.CompareTag("Mine") || (collision.CompareTag("Submarine") || collision.CompareTag("Player") && isHeavy))
         {
             return;
         }
