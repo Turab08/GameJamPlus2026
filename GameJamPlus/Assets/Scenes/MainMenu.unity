@@ -151,11 +151,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1311232102}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -150.7, y: -161}
-  m_SizeDelta: {x: 392.1, y: 101.7}
-  m_Pivot: {x: -0.72, y: 0.5}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: -500, y: -200}
+  m_SizeDelta: {x: 1000, y: 101.70001}
+  m_Pivot: {x: 0, y: 0}
 --- !u!114 &52320964
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -176,7 +176,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Aurora '
+  m_text: Catmarine
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -210,8 +210,8 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 1
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -1144,7 +1144,7 @@ GameObject:
   - component: {fileID: 2096570380}
   - component: {fileID: 2096570379}
   m_Layer: 5
-  m_Name: Button
+  m_Name: Start
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1167,7 +1167,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 628.6, y: -52.7}
+  m_AnchoredPosition: {x: -400, y: -100}
   m_SizeDelta: {x: 350, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2096570379
@@ -1227,7 +1227,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.24313727, g: 0.7725491, b: 0.8000001, a: 1}
+  m_Color: {r: 0.13725491, g: 0.80784315, b: 0.41960785, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1265,7 +1265,7 @@ GameObject:
   - component: {fileID: 2098907196}
   - component: {fileID: 2098907195}
   m_Layer: 5
-  m_Name: Button (1)
+  m_Name: Exit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1288,7 +1288,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 628.6, y: -249.4}
+  m_AnchoredPosition: {x: 400, y: -100}
   m_SizeDelta: {x: 350, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2098907195
@@ -1348,7 +1348,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.23137257, g: 0.7411765, b: 0.7686275, a: 1}
+  m_Color: {r: 0.13725491, g: 0.80784315, b: 0.41960785, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
