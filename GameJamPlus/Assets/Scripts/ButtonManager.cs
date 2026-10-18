@@ -21,4 +21,13 @@ public class ButtonManager : MonoBehaviour
     {
         SceneManager.LoadScene(0);
     }
+
+    public void Play()
+    {
+        SceneManager.LoadScene(1);
+    }
+    public void Quit()
+    {
+        Application.Quit();
+    }
 }

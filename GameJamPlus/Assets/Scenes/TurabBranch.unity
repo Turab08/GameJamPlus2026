@@ -4215,6 +4215,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Diver
       objectReference: {fileID: 0}
+    - target: {fileID: 1253364153307202267, guid: b302f08ab1f568f48b21a95eedc493a6, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 5124193990492580687, guid: b302f08ab1f568f48b21a95eedc493a6, type: 3}
       propertyPath: m_LocalPosition.x
       value: -6.97
